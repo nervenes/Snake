@@ -47,8 +47,10 @@ struct Snake {
             }
         }
 
-        while !Task.isCancelled {
+        outer: while !Task.isCancelled {
             while isPaused {
+                if Task.isCancelled { break outer }
+                
                 if let key = try terminal.getInput() {
                     switch key {
                     case .esc: isPaused.toggle()
