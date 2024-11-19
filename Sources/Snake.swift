@@ -8,7 +8,7 @@
 import Dispatch
 
 @main
-struct Snake {
+struct Snake: ~Copyable {
     static func main() async {
         var terminal = Terminal()
         try! terminal.setup()
