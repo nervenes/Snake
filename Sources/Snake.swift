@@ -85,7 +85,9 @@ struct Snake: ~Copyable {
 
             if let key = try terminal.getInput() {
                 switch key {
-                case .esc: isPaused.toggle()
+                case .esc:
+                    isPaused.toggle()
+                    continue
                 case .w: direction = .up
                 case .a: direction = .left
                 case .s: direction = .down
