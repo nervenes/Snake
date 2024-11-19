@@ -88,10 +88,11 @@ struct Snake: ~Copyable {
                 case .esc:
                     isPaused.toggle()
                     continue
-                case .w: direction = .up
-                case .a: direction = .left
-                case .s: direction = .down
-                case .d: direction = .right
+                case .w where direction != .down: direction = .up
+                case .a where direction != .right: direction = .left
+                case .s where direction != .up: direction = .down
+                case .d where direction != .left: direction = .right
+                default: break
                 }
             }
 
