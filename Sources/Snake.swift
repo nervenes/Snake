@@ -49,6 +49,7 @@ struct Main: ~Copyable {
 
         var isPaused = false
         var direction: Direction = .right
+        var history: [Terminal.Position] = []
         var snake: [Part] = [
             (
                 part: .head,
@@ -86,9 +87,9 @@ struct Main: ~Copyable {
                 }
             }
 
-            clearSnake()
-            moveHead()
-            dragBody()
+            clearSnake(&history)
+            moveHead(&history)
+            dragBody(&history)
 
             if let key = try terminal.getInput() {
                 switch key {
@@ -101,16 +102,16 @@ struct Main: ~Copyable {
                 }
             }
 
-            try await Task.sleep(for: .milliseconds(175))
+            try await Task.sleep(for: .milliseconds(250))
         }
 
-        func clearSnake() {
+        func clearSnake(_ history: inout [Terminal.Position]) {
             for idx in snake.indices {
                 terminal.remove(at: snake[idx].position)
             }
         }
 
-        func moveHead() {
+        func moveHead(_ history: inout [Terminal.Position]) {
             for idx in snake.indices {
 
                 if snake[idx].part == .head {
@@ -144,7 +145,7 @@ struct Main: ~Copyable {
             }
         }
 
-        func dragBody() {
+        func dragBody(_ history: inout [Terminal.Position]) {
             for idx in snake.indices {
 
                 if snake[idx].part == .body {
