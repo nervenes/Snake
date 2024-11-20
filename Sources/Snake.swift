@@ -14,13 +14,14 @@ enum Direction {
     case right
 }
 
-enum Snake: Character {
-    case head = "o"
-    case body = "*"
+enum Part: Character {
+    case head = "@"
+    case body = "o"
+    case food = "*"
 }
 
 @main
-struct Main: ~Copyable {
+struct Main {
     static func main() async {
         var terminal = Terminal()
         try! terminal.setup()
@@ -45,34 +46,25 @@ struct Main: ~Copyable {
     }
 
     private static func run(_ terminal: inout Terminal) async throws {
-        typealias Part = (part: Snake, position: Terminal.Position)
-
+        var isDead = false
         var isPaused = false
+        var snake: [Part] = [.head, .body]
         var direction: Direction = .right
         var history: [Terminal.Position] = []
-        var snake: [Part] = [
-            (
-                part: .head,
-                position: (
-                    x: terminal.size.width / 2,
-                    y: terminal.size.height / 2
-                )
-            ),
-            (
-                part: .body,
-                position: (
-                    x: (terminal.size.width / 2) - 1,
-                    y: terminal.size.height / 2
-                )
-            ),
-        ]
+        var position: Terminal.Position = (
+            x: terminal.size.width / 2,
+            y: terminal.size.height / 2
+        )
+        
+        if let position = terminal.getRandomEmptyPosition() {
+            terminal.insert(Part.food.rawValue, at: position)
+        }
 
         outer: while !Task.isCancelled {
-
-            while isPaused {
+            while isPaused || isDead {
                 if Task.isCancelled { break outer }
 
-                if let key = try terminal.getInput() {
+                if let key = try terminal.getInput(), isPaused == true {
                     switch key {
                     case .esc: isPaused.toggle()
                     default: continue
@@ -80,12 +72,54 @@ struct Main: ~Copyable {
                 }
             }
 
-            for idx in snake.indices {
-                terminal.remove(at: snake[idx].position)
+            switch direction {
+            case .right:
+                position.x =
+                    (position.x + 1) % terminal.size.width
+            case .left:
+                position.x =
+                    position.x > 0
+                    ? position.x - 1
+                    : terminal.size.width - 1
+            case .up:
+                position.y =
+                    position.y > 0
+                    ? position.y - 1
+                    : terminal.size.height - 1
+            case .down:
+                position.y =
+                    (position.y + 1) % terminal.size.height
             }
             
-            moveHead(&history)
-            moveBody(&history)
+            if terminal.check(is: Part.body.rawValue, at: position) {
+                isDead = true
+                continue
+            }
+            
+            if terminal.check(is: Part.food.rawValue, at: position) {
+                snake.append(.body)
+                
+                if let position = terminal.getRandomEmptyPosition() {
+                    terminal.insert(Part.food.rawValue, at: position)
+                }
+            }
+            
+            terminal.remove(at: position)
+            for position in history {
+                terminal.remove(at: position)
+            }
+
+            history.append(position)
+            if history.count > snake.count {
+                _ = history.removeFirst()
+            }
+
+            terminal.insert(Part.head.rawValue, at: position)
+            
+            for idx in snake.indices where snake[idx] == .body {
+                let position = history[idx - 1]
+                terminal.insert(Part.body.rawValue, at: position)
+            }
 
             if let key = try terminal.getInput() {
                 switch key {
@@ -98,53 +132,7 @@ struct Main: ~Copyable {
                 }
             }
 
-            try await Task.sleep(for: .milliseconds(250))
-        }
-
-        func clearSnake(_ history: inout [Terminal.Position]) {
-            for idx in snake.indices {
-                terminal.remove(at: snake[idx].position)
-            }
-        }
-
-        func moveHead(_ history: inout [Terminal.Position]) {
-            for idx in snake.indices where snake[idx].part == .head {
-                switch direction {
-                case .right:
-                    snake[idx].position.x =
-                        (snake[idx].position.x + 1) % terminal.size.width
-                case .left:
-                    snake[idx].position.x =
-                        snake[idx].position.x > 0
-                        ? snake[idx].position.x - 1
-                        : terminal.size.width - 1
-                case .up:
-                    snake[idx].position.y =
-                        snake[idx].position.y > 0
-                        ? snake[idx].position.y - 1
-                        : terminal.size.height - 1
-                case .down:
-                    snake[idx].position.y =
-                        (snake[idx].position.y + 1) % terminal.size.height
-                }
-
-                history.append(snake[idx].position)
-                if history.count > snake.count {
-                    _ = history.removeFirst()
-                }
-
-                terminal.insert(
-                    snake[idx].part.rawValue, at: snake[idx].position)
-            }
-        }
-
-        func moveBody(_ history: inout [Terminal.Position]) {
-            for idx in snake.indices where snake[idx].part == .body {
-                snake[idx].position = history[idx - 1]
-
-                terminal.insert(
-                    snake[idx].part.rawValue, at: snake[idx].position)
-            }
+            try await Task.sleep(for: .milliseconds(100))
         }
     }
 }

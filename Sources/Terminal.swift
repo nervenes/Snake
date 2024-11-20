@@ -8,7 +8,7 @@
 import Darwin
 import os
 
-struct Terminal: ~Copyable {
+struct Terminal {
     typealias Position = (x: Int, y: Int)
     typealias Size = (height: Int, width: Int)
     
@@ -53,6 +53,24 @@ struct Terminal: ~Copyable {
 
     mutating func remove(at position: Position) {
         insert(nil, at: position)
+    }
+    
+    func check(is char: Character, at position: Position) -> Bool {
+        buffer[position.y][position.x] == char
+    }
+    
+    func getRandomEmptyPosition() -> Position? {
+        var positions: [Position] = []
+        
+        for i in buffer.indices {
+            for j in buffer[i].indices {
+                if buffer[i][j] == nil {
+                    positions.append(Position(x: j, y: i))
+                }
+            }
+        }
+        
+        return positions.randomElement()
     }
 
     func execute(_ sequence: ANSIEscapeSequence) {
