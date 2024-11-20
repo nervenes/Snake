@@ -65,13 +65,6 @@ struct Main: ~Copyable {
                     y: terminal.size.height / 2
                 )
             ),
-            (
-                part: .body,
-                position: (
-                    x: (terminal.size.width / 2) - 2,
-                    y: terminal.size.height / 2
-                )
-            ),
         ]
 
         outer: while !Task.isCancelled {
@@ -131,7 +124,7 @@ struct Main: ~Copyable {
                     snake[idx].position.y =
                         (snake[idx].position.y + 1) % terminal.size.height
                 }
-                
+
                 history.append(snake[idx].position)
                 if history.count > snake.count {
                     _ = history.removeFirst()
@@ -143,14 +136,8 @@ struct Main: ~Copyable {
         }
 
         func moveBody(_ history: inout [Terminal.Position]) {
-            for idx in snake.indices {
-                if snake[idx].part == .body {
-
-                }
-
-                if snake[idx].part == .head {
-                    break
-                }
+            for idx in snake.indices where snake[idx].part == .body {
+                snake[idx].position = history[idx-1]
 
                 terminal.insert(
                     snake[idx].part.rawValue, at: snake[idx].position)
