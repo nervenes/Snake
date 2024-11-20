@@ -51,6 +51,10 @@ struct Terminal: ~Copyable {
     mutating func remove(at position: Position) {
         insert(nil, at: position)
     }
+    
+    func getBlock(at position: Position) -> Block? {
+        buffer[position.y][position.x]
+    }
 
     func execute(_ sequence: ANSIEscapeSequence) {
         print(sequence.rawValue, terminator: "")

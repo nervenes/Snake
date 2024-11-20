@@ -24,7 +24,7 @@ enum Key: Character {
 }
 
 enum Block: Character {
-    //    case full = "█"
+    case full = "█"
     case upper = "▀"
     case lower = "▄"
 }

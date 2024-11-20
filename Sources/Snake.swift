@@ -34,23 +34,17 @@ struct Snake: ~Copyable {
 
     private static func run(_ terminal: inout Terminal) async throws {
         var isPaused = false
-        var position = (x: 0, y: 0)
-        var previousPosition = (x: 0, y: 0)
+
+        var position: Position = (x: 0, y: 0)
+
         var block: Block = .upper
         var direction: Direction = .right
-        var oppositeDirection: Direction {
-            switch direction {
-            case .right: return .left
-            case .left: return .right
-            case .up: return .down
-            case .down: return .up
-            }
-        }
+        var previousDirection: Direction = direction
 
         outer: while !Task.isCancelled {
             while isPaused {
                 if Task.isCancelled { break outer }
-                
+
                 if let key = try terminal.getInput() {
                     switch key {
                     case .esc: isPaused.toggle()
@@ -58,8 +52,6 @@ struct Snake: ~Copyable {
                     }
                 }
             }
-            
-            previousPosition = position
 
             switch (direction, block) {
             case (.right, _):
@@ -67,21 +59,51 @@ struct Snake: ~Copyable {
             case (.left, _):
                 position.x =
                     position.x > 0 ? position.x - 1 : terminal.size.width - 1
-            case (.up, .upper):
-                block = .lower
+            case (.up, .upper), (.up, .full):
                 position.y =
                     position.y > 0 ? position.y - 1 : terminal.size.height - 1
-            case (.up, .lower):
-                block = .upper
-            case (.down, .lower):
-                block = .upper
+            case (.down, .lower), (.down, .full):
                 position.y = (position.y + 1) % terminal.size.height
-            case (.down, .upper):
-                block = .lower
+            default: break
             }
 
-            terminal.remove(at: previousPosition)
+            switch (direction, block) {
+            case (.right, .full), (.left, .full):
+                if let toReplace = terminal.getBlock(at: position) {
+                    switch toReplace {
+                    case .upper, .lower: block = .full
+                    default: break
+                    }
+                } else {
+                    switch previousDirection {
+                    case .down: block = .lower
+                    case .up: block = .upper
+                    default: break
+                    }
+                }
+            case (.right, _), (.left, _):
+                if let toReplace = terminal.getBlock(at: position) {
+                    switch toReplace {
+                    case .upper, .lower: block = .full
+                    default: break
+                    }
+                }
+            case (.up, .full):
+                block = .lower
+            case (.up, .upper):
+                block = .lower
+            case (.up, .lower):
+                block = .full
+            case (.down, .full):
+                block = .upper
+            case (.down, .upper):
+                block = .full
+            case (.down, .lower):
+                block = .upper
+            }
+
             terminal.insert(block, at: position)
+            previousDirection = direction
 
             if let key = try terminal.getInput() {
                 switch key {
@@ -94,7 +116,7 @@ struct Snake: ~Copyable {
                 }
             }
 
-            try await Task.sleep(for: .milliseconds(150))
+            try await Task.sleep(for: .milliseconds(175))
         }
     }
 }
