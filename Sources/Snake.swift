@@ -56,8 +56,10 @@ struct Main {
             y: terminal.size.height / 2
         )
         
-        if let position = terminal.getRandomEmptyPosition() {
-            terminal.insert(Part.food.rawValue, at: position)
+        for _ in 0..<max(1, min(20, Int(Double(terminal.size.width * terminal.size.height) / 500.0))) {
+            if let position = terminal.getRandomEmptyPosition() {
+                terminal.insert(Part.food.rawValue, at: position)
+            }
         }
 
         outer: while !Task.isCancelled {
@@ -132,7 +134,7 @@ struct Main {
                 }
             }
 
-            try await Task.sleep(for: .milliseconds(100))
+            try await Task.sleep(for: .milliseconds(150))
         }
     }
 }
