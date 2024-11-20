@@ -64,9 +64,17 @@ struct Main: ~Copyable {
                     y: terminal.size.height / 2
                 )
             ),
+            (
+                part: .body,
+                position: (
+                    x: (terminal.size.width / 2) - 2,
+                    y: terminal.size.height / 2
+                )
+            ),
         ]
 
         outer: while !Task.isCancelled {
+            
             while isPaused {
                 if Task.isCancelled { break outer }
 
@@ -78,31 +86,10 @@ struct Main: ~Copyable {
                 }
             }
             
-            for idx in snake.indices {
-                terminal.remove(at: snake[idx].position)
-            }
-
-            for idx in snake.indices {
-                switch direction {
-                case .right:
-                    snake[idx].position.x =
-                        (snake[idx].position.x + 1) % terminal.size.width
-                case .left:
-                    snake[idx].position.x =
-                        snake[idx].position.x > 0
-                        ? snake[idx].position.x - 1 : terminal.size.width - 1
-                case .up:
-                    snake[idx].position.y =
-                        snake[idx].position.y > 0
-                        ? snake[idx].position.y - 1 : terminal.size.height - 1
-                case .down:
-                    snake[idx].position.y =
-                        (snake[idx].position.y + 1) % terminal.size.height
-                }
-
-                terminal.insert(
-                    snake[idx].part.rawValue, at: snake[idx].position)
-            }
+            clearSnake()
+            moveHead()
+            dragBody()
+          
 
             if let key = try terminal.getInput() {
                 switch key {
@@ -117,5 +104,61 @@ struct Main: ~Copyable {
 
             try await Task.sleep(for: .milliseconds(175))
         }
+        
+        func clearSnake() {
+            for idx in snake.indices {
+                terminal.remove(at: snake[idx].position)
+            }
+        }
+        
+        func moveHead() {
+            for idx in snake.indices {
+                
+                if snake[idx].part == .head {
+                    switch direction {
+                        
+                    case .right:
+                        snake[idx].position.x =
+                        (snake[idx].position.x + 1) % terminal.size.width
+                    case .left:
+                        snake[idx].position.x =
+                        snake[idx].position.x > 0
+                        ? snake[idx].position.x - 1 : terminal.size.width - 1
+                    case .up:
+                        snake[idx].position.y =
+                        snake[idx].position.y > 0
+                        ? snake[idx].position.y - 1 : terminal.size.height - 1
+                    case .down:
+                        snake[idx].position.y =
+                        (snake[idx].position.y + 1) % terminal.size.height
+                    }
+                }
+                
+                if snake[idx].part == .body {
+                    break
+                }
+                
+                terminal.insert(
+                    snake[idx].part.rawValue, at: snake[idx].position)
+            }
+        }
+        
+        func dragBody() {
+            for idx in snake.indices {
+                
+                if snake[idx].part == .body {
+                  
+                }
+                
+                if snake[idx].part == .head {
+                    break
+                }
+                
+                terminal.insert(
+                    snake[idx].part.rawValue, at: snake[idx].position)
+            }
+        }
     }
+    
+  
 }
