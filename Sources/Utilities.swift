@@ -5,28 +5,12 @@
 //  Created by Evren Sen on 2024-11-19.
 //
 
-typealias Size = (height: Int, width: Int)
-typealias Position = (x: Int, y: Int)
-
-enum Direction {
-    case up
-    case left
-    case down
-    case right
-}
-
 enum Key: Character {
     case esc = "\u{1B}"
     case w = "\u{77}"
     case a = "\u{61}"
     case s = "\u{73}"
     case d = "\u{64}"
-}
-
-enum Block: Character {
-    case full = "█"
-    case upper = "▀"
-    case lower = "▄"
 }
 
 enum ANSIEscapeSequence {

@@ -7,8 +7,20 @@
 
 import Dispatch
 
+enum Direction {
+    case up
+    case left
+    case down
+    case right
+}
+
+enum Snake: Character {
+    case head = "o"
+    case body = "*"
+}
+
 @main
-struct Snake: ~Copyable {
+struct Main: ~Copyable {
     static func main() async {
         var terminal = Terminal()
         try! terminal.setup()
@@ -33,13 +45,26 @@ struct Snake: ~Copyable {
     }
 
     private static func run(_ terminal: inout Terminal) async throws {
+        typealias Part = (part: Snake, position: Terminal.Position)
+
         var isPaused = false
-
-        var position: Position = (x: 0, y: 0)
-
-        var block: Block = .upper
         var direction: Direction = .right
-        var previousDirection: Direction = direction
+        var snake: [Part] = [
+            (
+                part: .head,
+                position: (
+                    x: terminal.size.width / 2,
+                    y: terminal.size.height / 2
+                )
+            ),
+            (
+                part: .body,
+                position: (
+                    x: (terminal.size.width / 2) - 1,
+                    y: terminal.size.height / 2
+                )
+            ),
+        ]
 
         outer: while !Task.isCancelled {
             while isPaused {
@@ -52,58 +77,32 @@ struct Snake: ~Copyable {
                     }
                 }
             }
-
-            switch (direction, block) {
-            case (.right, _):
-                position.x = (position.x + 1) % terminal.size.width
-            case (.left, _):
-                position.x =
-                    position.x > 0 ? position.x - 1 : terminal.size.width - 1
-            case (.up, .upper), (.up, .full):
-                position.y =
-                    position.y > 0 ? position.y - 1 : terminal.size.height - 1
-            case (.down, .lower), (.down, .full):
-                position.y = (position.y + 1) % terminal.size.height
-            default: break
+            
+            for idx in snake.indices {
+                terminal.remove(at: snake[idx].position)
             }
 
-            switch (direction, block) {
-            case (.right, .full), (.left, .full):
-                if let toReplace = terminal.getBlock(at: position) {
-                    switch toReplace {
-                    case .upper, .lower: block = .full
-                    default: break
-                    }
-                } else {
-                    switch previousDirection {
-                    case .down: block = .lower
-                    case .up: block = .upper
-                    default: break
-                    }
+            for idx in snake.indices {
+                switch direction {
+                case .right:
+                    snake[idx].position.x =
+                        (snake[idx].position.x + 1) % terminal.size.width
+                case .left:
+                    snake[idx].position.x =
+                        snake[idx].position.x > 0
+                        ? snake[idx].position.x - 1 : terminal.size.width - 1
+                case .up:
+                    snake[idx].position.y =
+                        snake[idx].position.y > 0
+                        ? snake[idx].position.y - 1 : terminal.size.height - 1
+                case .down:
+                    snake[idx].position.y =
+                        (snake[idx].position.y + 1) % terminal.size.height
                 }
-            case (.right, _), (.left, _):
-                if let toReplace = terminal.getBlock(at: position) {
-                    switch toReplace {
-                    case .upper, .lower: block = .full
-                    default: break
-                    }
-                }
-            case (.up, .full):
-                block = .lower
-            case (.up, .upper):
-                block = .lower
-            case (.up, .lower):
-                block = .full
-            case (.down, .full):
-                block = .upper
-            case (.down, .upper):
-                block = .full
-            case (.down, .lower):
-                block = .upper
-            }
 
-            terminal.insert(block, at: position)
-            previousDirection = direction
+                terminal.insert(
+                    snake[idx].part.rawValue, at: snake[idx].position)
+            }
 
             if let key = try terminal.getInput() {
                 switch key {

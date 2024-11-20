@@ -9,8 +9,11 @@ import Darwin
 import os
 
 struct Terminal: ~Copyable {
+    typealias Position = (x: Int, y: Int)
+    typealias Size = (height: Int, width: Int)
+    
     var size: Size = (0, 0)
-    private var buffer: [[Block?]] = []
+    private var buffer: [[Character?]] = []
     private var originalState = termios()
 
     mutating func setup() throws {
@@ -41,19 +44,15 @@ struct Terminal: ~Copyable {
         tcsetattr(STDIN_FILENO, TCSANOW, &originalState)
     }
 
-    mutating func insert(_ block: Block?, at position: Position) {
-        buffer[position.y][position.x] = block
+    mutating func insert(_ char: Character?, at position: Position) {
+        buffer[position.y][position.x] = char
         execute(.moveCursor(x: position.x, y: position.y))
-        print(block?.rawValue ?? " ", terminator: "")
+        print(char ?? " ", terminator: "")
         fflush(stdout)
     }
 
     mutating func remove(at position: Position) {
         insert(nil, at: position)
-    }
-    
-    func getBlock(at position: Position) -> Block? {
-        buffer[position.y][position.x]
     }
 
     func execute(_ sequence: ANSIEscapeSequence) {
