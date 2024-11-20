@@ -89,7 +89,7 @@ struct Main: ~Copyable {
 
             clearSnake(&history)
             moveHead(&history)
-            dragBody(&history)
+            moveBody(&history)
 
             if let key = try terminal.getInput() {
                 switch key {
@@ -112,32 +112,29 @@ struct Main: ~Copyable {
         }
 
         func moveHead(_ history: inout [Terminal.Position]) {
-            for idx in snake.indices {
-
-                if snake[idx].part == .head {
-                    switch direction {
-
-                    case .right:
-                        snake[idx].position.x =
-                            (snake[idx].position.x + 1) % terminal.size.width
-                    case .left:
-                        snake[idx].position.x =
-                            snake[idx].position.x > 0
-                            ? snake[idx].position.x - 1
-                            : terminal.size.width - 1
-                    case .up:
-                        snake[idx].position.y =
-                            snake[idx].position.y > 0
-                            ? snake[idx].position.y - 1
-                            : terminal.size.height - 1
-                    case .down:
-                        snake[idx].position.y =
-                            (snake[idx].position.y + 1) % terminal.size.height
-                    }
+            for idx in snake.indices where snake[idx].part == .head {
+                switch direction {
+                case .right:
+                    snake[idx].position.x =
+                        (snake[idx].position.x + 1) % terminal.size.width
+                case .left:
+                    snake[idx].position.x =
+                        snake[idx].position.x > 0
+                        ? snake[idx].position.x - 1
+                        : terminal.size.width - 1
+                case .up:
+                    snake[idx].position.y =
+                        snake[idx].position.y > 0
+                        ? snake[idx].position.y - 1
+                        : terminal.size.height - 1
+                case .down:
+                    snake[idx].position.y =
+                        (snake[idx].position.y + 1) % terminal.size.height
                 }
-
-                if snake[idx].part == .body {
-                    break
+                
+                history.append(snake[idx].position)
+                if history.count > snake.count {
+                    _ = history.removeFirst()
                 }
 
                 terminal.insert(
@@ -145,9 +142,8 @@ struct Main: ~Copyable {
             }
         }
 
-        func dragBody(_ history: inout [Terminal.Position]) {
+        func moveBody(_ history: inout [Terminal.Position]) {
             for idx in snake.indices {
-
                 if snake[idx].part == .body {
 
                 }
