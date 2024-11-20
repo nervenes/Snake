@@ -80,7 +80,10 @@ struct Main: ~Copyable {
                 }
             }
 
-            clearSnake(&history)
+            for idx in snake.indices {
+                terminal.remove(at: snake[idx].position)
+            }
+            
             moveHead(&history)
             moveBody(&history)
 
@@ -137,7 +140,7 @@ struct Main: ~Copyable {
 
         func moveBody(_ history: inout [Terminal.Position]) {
             for idx in snake.indices where snake[idx].part == .body {
-                snake[idx].position = history[idx-1]
+                snake[idx].position = history[idx - 1]
 
                 terminal.insert(
                     snake[idx].part.rawValue, at: snake[idx].position)
